@@ -11,7 +11,7 @@ Obviously, it will not be as efficient as Numpy, since it is written in Python a
 ### Naive Bayes
 
 Sample usage:
-
+```python
 import naivebayes as nb
 Xs = [ 	[1,2],
 		[3,4],
@@ -35,7 +35,7 @@ classes = [0, 1] # set of all classes to consider - default is to get the classe
 
 nbobj = nb.train(Ys, Xs, classes, active)
 nb.classify([1,3], nbobj) # returns the predicted class of a data point with attributes [1,3]
-
+```
 
 
 
