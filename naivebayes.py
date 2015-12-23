@@ -11,7 +11,7 @@ def train(Ys, Xs, classes=[], active=[]):
         classset = {}
         map(classset.__setitem__, Ys, [])
         classes = classset.keys()
-
+        
     Xs = transpose([transpose(Xs)[a] for a in active])
 
     split_X = []
