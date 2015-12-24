@@ -24,9 +24,8 @@ def train(Ys, Xs, classes=[], active=[]):
     covinvs = []
     for c in range(len(classes)):
         means += [map(mean, transpose(split_X[c]))]
-        covs += [map(var, transpose(split_X[c]))]
+        covs += [cov(split_X[c])]
         priors += [Ys.count(classes[c])/float(len(Ys))]
-    covs = map(lambda x: diag(x), covs)
     for c in range(len(classes)):
         covinvs += [inv(covs[c])]
     return [means, covs, priors, covinvs, classes, active]
