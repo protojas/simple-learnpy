@@ -9,6 +9,9 @@ def euclidean(a,b):
     z = map(lambda r: pow(r[0]-r[1],2),z)
     return sqrt(sum(z))
 
+def flatten(a):
+    return [i for s in a for i in s]
+
 def cityblock(a,b):
     z = zip(a,b)
     z = map(lambda r: math.abs(a-b),z)
@@ -60,8 +63,7 @@ def dot(P, Q):
     pwidth = len(P[0])
     qheight = len(Q)
     qwidth = len(Q[0])
-
-    assert (pwidth == qheight), "matrixes cannot be multiplied due to mismatched dimension"
+    assert (pwidth == qheight), "matrices cannot be multiplied due to mismatched dimension"
 
     prod = []
     for i in range(pheight):
@@ -108,6 +110,41 @@ def sgn(P):
             if L % 2 == 0:
                 ret = -1 * ret
     return ret
+def veclen(v): #should be [[x x x x x]] or [[x] [x] [x] [x]]
+    assert len(v) == 1 or len(v[0]) == 1, "not a vector"
+    if len(v[0]) == 1:
+        v = transpose(v)
+    return euclidean(v[0], [0]*len(v[0]))
+
+
+def arnoldi(A):
+    b = [5] * len(A)
+    qs = [[]] * (len(A[0])+1)
+    qs[0] = map(lambda x: float(x) / veclen([b]), b)
+    h = [ [ 0 for i in range(len(A)) ] for j in range(len(A)+1) ]
+    for n in range(0, len(A)):
+        v = dot(A, transpose([qs[n]]))
+	for j in range(0, n+1):
+            h[j][n] =  dot([qs[j]], v)[0][0]
+            v = transpose([vecsub(transpose(v)[0],map(lambda x: x * h[j][n], qs[j]))])
+	h[n+1][n] = veclen(v)
+        qs[n+1] = map(lambda x: float(x) / h[n+1][n],transpose(v)[0])
+    return h[:-1]
+
+def eig(A):
+    if len(A) == 2 and len(A[0]) == 2:
+        return eig22(A)
+    r1,r2 = eig22(transpose(transpose(A[-2:])[-2:]))
+def eig22(A):
+    assert len(A) == 2 and len(A[0]) == 2, "not a 2x2 matrix"
+
+    T = float(A[0][0] + A[1][1]) #T = a + d
+    D = float(det(A))
+
+    eig1 = T/2 + sqrt(pow(T,2)/4 - D)
+    eig2 = T/2 - sqrt(pow(T,2)/4 - D)
+
+    return eig1,eig2
 
 # returns a list of all permutations of the set {0, 1, 2, ... n}
 def permute(n):
@@ -217,3 +254,5 @@ def prettyM(M):
     for i in M:
         print(map(lambda x: round(x, 8),i))
     print "]"
+
+prettyM(arnoldi([[1, 2, 3, 7], [5, 2, 9, 4], [19, 22, 1, 14], [2, 2, 3 ,4]]))

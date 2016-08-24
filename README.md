@@ -43,7 +43,6 @@ classes = [0, 1] # set of all classes to consider - default is to get the classe
 nbobj = nb.train(Ys, Xs, classes, active)
 nb.classify([1,3], nbobj) # returns the predicted class of a data point with attributes [1,3]
 
-
 mleobj = mle.train(Ys, Xs, classes, active)
 mle.classify([1,3], mleobj)
 
