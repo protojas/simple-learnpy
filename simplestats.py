@@ -4,6 +4,16 @@ from math import pi as PI_CONST, e as E_CONST, sqrt
 def mean(arr):
     return sum(arr)/float(len(arr))
 
+def euclidean(a,b):
+    z = zip(a,b)
+    z = map(lambda r: pow(r[0]-r[1],2),z)
+    return sqrt(sum(z))
+
+def cityblock(a,b):
+    z = zip(a,b)
+    z = map(lambda r: math.abs(a-b),z)
+    return sum(z)
+
 # returns the variance of a list
 def var(arr):
     m = mean(arr);
@@ -32,7 +42,7 @@ def covariance(X, Y):
         return 0
     return sum(map(lambda i: ((X[i] - xmean) * (Y[i] - ymean)), range(len(X))))/float(len(X)-1)
 
-# returns the transpose of a matrix    
+# returns the transpose of a matrix
 def transpose(M):
     nwidth = len(M)
     nheight = len(M[0])
@@ -118,7 +128,7 @@ def normalX(X, cov, mean, covinv=[]):
     eexpo = map(lambda x: rowscale([x],0,-0.5)[0], dot([standardized], dot(covinv, transpose([standardized]))))
     ecoeff =  (1 / (((2 * PI_CONST) ** (float(len(cov))/2)) * sqrt(det(cov))))
     return ecoeff * (E_CONST ** det(eexpo))
-    
+
 # returns the inverse of a matrix if it exists
 def inv(M):
     assert (hasinv(M)), "matrix is not square or is not invertible"
@@ -139,7 +149,7 @@ def inv(M):
             j += 1
             i += 1
             continue
-        
+
         # make the leading value equal to 1
         R = rowscale(R, i, 1/float(R[i][j]))
 
@@ -153,7 +163,7 @@ def inv(M):
 
     # return the transformed identity
     return transpose(RT[n:])
-        
+
 # multiply row i by factor n
 def rowscale(M, i, n):
     return M[:i] + [map(lambda x: n * x, M[i])] +  M[i+1:]

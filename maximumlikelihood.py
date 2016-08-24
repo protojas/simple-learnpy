@@ -3,15 +3,15 @@ from simplestats import *
 def train(Ys, Xs, classes=[], active=[]):
     assert (Xs != []), "no training data"
     assert (len(Xs) == len(Ys)), "Xs and Ys have differing lengths"
-        
+
     if active == []:
         active = range(len(Xs[0]))
-    
+
     if classes == []:
         classset = {}
         map(classset.__setitem__, Ys, [])
         classes = classset.keys()
-        
+
     Xs = transpose([transpose(Xs)[a] for a in active])
 
     split_X = []
@@ -37,7 +37,7 @@ def classify(datum, trainobj):
     covinvs = trainobj[3]
     classes = trainobj[4]
     active = trainobj[5]
-    
+
     posteriors = []
     likelihoods = []
 
@@ -47,3 +47,4 @@ def classify(datum, trainobj):
     for c in range(0, len(classes)):
         posteriors += [likelihoods[c] * priors[c]]
     return classes[posteriors.index(max(posteriors))]
+

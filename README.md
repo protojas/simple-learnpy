@@ -10,9 +10,16 @@ Obviously, it will not be as efficient as Numpy, since it is written in Python a
 
 ### Naive Bayes
 
+### Maximum Likelihood Estimate
+
+### K-Nearest Neighbors
 Sample usage:
 ```python
+import maximumlikelihood as mle
 import naivebayes as nb
+import knn as knn
+import simplestats
+
 Xs = [ 	[1,2],
 		[3,4],
 		[5,7],
@@ -35,35 +42,13 @@ classes = [0, 1] # set of all classes to consider - default is to get the classe
 
 nbobj = nb.train(Ys, Xs, classes, active)
 nb.classify([1,3], nbobj) # returns the predicted class of a data point with attributes [1,3]
-```
 
-### Maximum Likelihood Estimate
-
-Sample usage:
-```python
-import maximumlikelihood as mle
-Xs = [ 	[1,2],
-		[3,4],
-		[5,7],
-		[2,9],
-		[5,1],
-		[3,2], 
-		[4,1],
-		[2,3]    ] # training data attributes
-Ys = [  0,
-		1,
-		0,
-		1,
-		1,
-		0, 
-		1,
-		1,     ] # labels for the training data
-		
-active = [0, 1] # which attributes to actually consider - default is to use all the attributes
-classes = [0, 1] # set of all classes to consider - default is to get the classes from Ys
 
 mleobj = mle.train(Ys, Xs, classes, active)
-mle.classify([1,3], mleobj) # returns the predicted class of a data point with attributes [1,3]
+mle.classify([1,3], mleobj)
+
+knnobj = knn.train(Ys, Xs, classes, active, 7, simplestats.euclidean) # must provide value of k and a distance function
+knn.classify([1,3], knnobj)
 ```
 
 
