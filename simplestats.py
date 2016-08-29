@@ -1,5 +1,6 @@
 import itertools
 from math import pi as PI_CONST, e as E_CONST, sqrt
+import cmath
 # returns the mean of a list
 def mean(arr):
     return sum(arr)/float(len(arr))
@@ -110,13 +111,15 @@ def sgn(P):
             if L % 2 == 0:
                 ret = -1 * ret
     return ret
+
+# returns the length of a vector
 def veclen(v): #should be [[x x x x x]] or [[x] [x] [x] [x]]
     assert len(v) == 1 or len(v[0]) == 1, "not a vector"
     if len(v[0]) == 1:
         v = transpose(v)
     return euclidean(v[0], [0]*len(v[0]))
 
-
+# returns Hn as a result of the Arnoldi iteration
 def arnoldi(A):
     b = [5] * len(A)
     qs = [[]] * (len(A[0])+1)
@@ -134,17 +137,67 @@ def arnoldi(A):
 def eig(A):
     if len(A) == 2 and len(A[0]) == 2:
         return eig22(A)
+    A = arnoldi(A)
     r1,r2 = eig22(transpose(transpose(A[-2:])[-2:]))
+
+    Ar1 = matsub(A,kidentity(len(A),r1))
+    Ar2 = matsub(A,kidentity(len(A),r2))
+
+    Ar1col = transpose(Ar1)[0]
+
+    res = []
+    for v in Ar2:
+        res += dot([v], transpose([Ar1col]))[0]
+    x = [map(lambda z: z.real, res)]
+    print x
+    xb = [x[0][:3]]
+
+    j = xb[0][0]
+    k = xb[0][1]
+    l = xb[0][2]
+
+    r = veclen(xb)
+    a = r * j
+    b = float(r) * (1 - pow(j,2)) / float(k)
+    c = 0
+    d = r * k
+    e = -1 * r * j
+    f = 0
+    g = r * l
+    h = 0
+    i = -1 * r * j
+
+    Q0b = [ [a,b,c],[d,e,f],[g,h,i] ]
+    Q0 = []
+    for ss in range(len(Q0b)):
+        Q0 += [Q0b[ss] + (len(x[0])-len(Q0b)) * [0]]
+    for ss in range(len(Q0b), len(x[0])):
+        Q0 += [[0]*ss + [1] + [0]*(len(x[0])-ss-1)]
+    prettyM(A)
+    prettyM(Q0)
+    return dot(inv(Q0),dot(A,Q0))
+# returns A-B if possible
+def matsub(A,B):
+    assert len(A) == len(B) and len(A[0]) == len(B[0]), "matrices not same size"
+    ret = []
+    for i in range(len(A)):
+        tmp = []
+        for j in range(len(A[0])):
+            tmp += [A[i][j] - B[i][j]]
+        ret += [tmp]
+    return ret
+
+# eigenvalues for a 2x2 matrix
 def eig22(A):
     assert len(A) == 2 and len(A[0]) == 2, "not a 2x2 matrix"
 
     T = float(A[0][0] + A[1][1]) #T = a + d
     D = float(det(A))
-
-    eig1 = T/2 + sqrt(pow(T,2)/4 - D)
-    eig2 = T/2 - sqrt(pow(T,2)/4 - D)
+    eig1 = T/2 + cmath.sqrt(pow(T,2)/4 - D)
+    eig2 = T/2 - cmath.sqrt(pow(T,2)/4 - D)
 
     return eig1,eig2
+
 
 # returns a list of all permutations of the set {0, 1, 2, ... n}
 def permute(n):
@@ -224,12 +277,16 @@ def rowswap(M, i, j):
 def hasinv(M):
     return len(M) == len(M[0]) and det(M) != 0
 
-# returns an N x N identity matrix
-def identity(N):
+# returns an N x N identity matrix multiplied by a constant k
+def kidentity(N,k):
     I = []
     for i in range(N):
-        I += [[0]*i + [1] + [0]*(N-i-1)]
+	I += [[0]*i +[k] + [0]*(N-i-1)]
     return I
+
+# returns an N x N identity matrix
+def identity(N):
+    return kidentity(N,1)
 
 # creates a diagonal matrix from the given array
 def diag(arr):
@@ -255,4 +312,5 @@ def prettyM(M):
         print(map(lambda x: round(x, 8),i))
     print "]"
 
-prettyM(arnoldi([[1, 2, 3, 7], [5, 2, 9, 4], [19, 22, 1, 14], [2, 2, 3 ,4]]))
+#print det([[1,14],[3,4]])
+prettyM(eig([[1, 2, 3, 7,3,4,2], [5, 2, 9, 4,2,3,2], [19, 22, 1, 14,3,2,7], [2, 2, 3 ,4,5,9,6],[6,6,6,7,8,8,10],[9,9,9,9,4,3,4],[10,11,12,14,15,2,1]]))
