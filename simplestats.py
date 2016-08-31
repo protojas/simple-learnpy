@@ -5,14 +5,17 @@ import cmath
 def mean(arr):
     return sum(arr)/float(len(arr))
 
+# returns the euclidean distance between two lists
 def euclidean(a,b):
     z = zip(a,b)
     z = map(lambda r: pow(r[0]-r[1],2),z)
     return sqrt(sum(z))
 
+# flattens a list of lists
 def flatten(a):
     return [i for s in a for i in s]
 
+# returns the city block distance between two lists
 def cityblock(a,b):
     z = zip(a,b)
     z = map(lambda r: math.abs(a-b),z)
@@ -120,6 +123,7 @@ def veclen(v): #should be [[x x x x x]] or [[x] [x] [x] [x]]
     return euclidean(v[0], [0]*len(v[0]))
 
 # returns Hn as a result of the Arnoldi iteration
+# currently unused
 def arnoldi(A):
     b = [5] * len(A)
     qs = [[]] * (len(A[0])+1)
@@ -134,48 +138,64 @@ def arnoldi(A):
         qs[n+1] = map(lambda x: float(x) / h[n+1][n],transpose(v)[0])
     return h[:-1]
 
+# note: does not support complex eigenvalues!! don't try to use it for that!
+# this is meant only for symmetric matrices (namely, covariance matrices, for PCA)
 def eig(A):
     if len(A) == 2 and len(A[0]) == 2:
         return eig22(A)
-    A = arnoldi(A)
-    r1,r2 = eig22(transpose(transpose(A[-2:])[-2:]))
+    T,V = qr(A, 4*len(A))
+    return [T[i][i] for i in range(len(T))], V
 
-    Ar1 = matsub(A,kidentity(len(A),r1))
-    Ar2 = matsub(A,kidentity(len(A),r2))
 
-    Ar1col = transpose(Ar1)[0]
+# QR factorization
+def householder(A):
+    n = len(A)
+    R = A
+    Q = [[float(0)] * n for i in range(n)]
 
-    res = []
-    for v in Ar2:
-        res += dot([v], transpose([Ar1col]))[0]
-    x = [map(lambda z: z.real, res)]
-    print x
-    xb = [x[0][:3]]
+    for k in range(n-1):
+        I = identity(n)
 
-    j = xb[0][0]
-    k = xb[0][1]
-    l = xb[0][2]
+        x = column(R[k:],k)
+        e = column(I[k:],k)
 
-    r = veclen(xb)
-    a = r * j
-    b = float(r) * (1 - pow(j,2)) / float(k)
-    c = 0
-    d = r * k
-    e = -1 * r * j
-    f = 0
-    g = r * l
-    h = 0
-    i = -1 * r * j
+        a = -cmp(x[0][0], 0) * veclen(x)
+        u = matsub(x, scale(a,e))
+        lenu = veclen(u)
+        v = [map(lambda p: p/lenu, u[0])]
+        Qm = matsub(identity(len(u[0])), scale(float(2), dot(transpose(v),v)))
+        Qt = [[ Qi(Qm,i,j,k) for i in range(n)] for j in range(n)]
+        if k == 0:
+            Q = Qt
+            R = dot(Qt,A)
+        else:
+            Q = dot(Qt,Q)
+            R = dot(Qt,R)
+    return transpose(Q), R
 
-    Q0b = [ [a,b,c],[d,e,f],[g,h,i] ]
-    Q0 = []
-    for ss in range(len(Q0b)):
-        Q0 += [Q0b[ss] + (len(x[0])-len(Q0b)) * [0]]
-    for ss in range(len(Q0b), len(x[0])):
-        Q0 += [[0]*ss + [1] + [0]*(len(x[0])-ss-1)]
-    prettyM(A)
-    prettyM(Q0)
-    return dot(inv(Q0),dot(A,Q0))
+def Qi(Qm, i, j, k):
+    if i < k or j < k:
+        return float(i == j)
+    else:
+        return Qm[i-k][j-k]
+
+# iterates and does QR factorizations up to itermax iterations
+def qr(A, itermax):
+    T = A
+    iter = 0
+    Qprod = identity(len(T))
+    while iter < itermax:
+        Q,R = householder(T)
+        T = dot(R,Q)
+        Qprod = dot(Qprod, Q)
+        iter += 1
+    return T, Qprod
+#returns A scaled by constant k
+def scale(k,A):
+    ret = A
+    for j in range(len(ret)):
+        ret = rowscale(ret, j, k)
+    return ret
 # returns A-B if possible
 def matsub(A,B):
     assert len(A) == len(B) and len(A[0]) == len(B[0]), "matrices not same size"
@@ -187,6 +207,9 @@ def matsub(A,B):
         ret += [tmp]
     return ret
 
+# adds two matrices together
+def matadd(A,B):
+    return matsub(A, scale(-1,B))
 # eigenvalues for a 2x2 matrix
 def eig22(A):
     assert len(A) == 2 and len(A[0]) == 2, "not a 2x2 matrix"
@@ -198,6 +221,13 @@ def eig22(A):
 
     return eig1,eig2
 
+# gets a column of a matrix as a 1xn vector
+def column(A,i):
+    return [transpose(A)[i]]
+
+# gets a row of a matrix as a 1xn vector
+def row(A,j):
+    return [A[j]]
 
 # returns a list of all permutations of the set {0, 1, 2, ... n}
 def permute(n):
@@ -281,7 +311,7 @@ def hasinv(M):
 def kidentity(N,k):
     I = []
     for i in range(N):
-	I += [[0]*i +[k] + [0]*(N-i-1)]
+	I += [[float(0)]*i +[float(k)] + [float(0)]*(N-i-1)]
     return I
 
 # returns an N x N identity matrix
@@ -312,5 +342,12 @@ def prettyM(M):
         print(map(lambda x: round(x, 8),i))
     print "]"
 
-#print det([[1,14],[3,4]])
-prettyM(eig([[1, 2, 3, 7,3,4,2], [5, 2, 9, 4,2,3,2], [19, 22, 1, 14,3,2,7], [2, 2, 3 ,4,5,9,6],[6,6,6,7,8,8,10],[9,9,9,9,4,3,4],[10,11,12,14,15,2,1]]))
+# rounds all the things in a matrix to two decimal places
+def roundM(M):
+    return map(lambda x: map(lambda y: round(y, 2), x), M)
+
+# returns the mean of all the datapoints in the matrix
+def matmean(M):
+    return map(mean, transpose(M))
+
+
